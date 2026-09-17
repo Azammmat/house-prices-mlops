@@ -1,0 +1,41 @@
+# Deployment: orchestrates the model API and the web app
+# in two separate containers, connected over a shared Docker network.
+#
+# Run from the REPO ROOT (not from this folder), since the build
+# context for both services is the repository root:
+#   docker compose -f code/deployment/docker-compose.yml up --build
+
+services:
+  api:
+    build:
+      context: ../..
+      dockerfile: code/deployment/api/Dockerfile
+    container_name: house-price-api
+    ports:
+      - "8000:8000"
+    volumes:
+      # Mount the trained model from the host so the API always serves
+      # the latest model produced by the training pipeline, without
+      # needing to rebuild the image every time the pipeline reruns.
+      - ../../models:/app/models:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  app:
+    build:
+      context: ../..
+      dockerfile: code/deployment/app/Dockerfile
+    container_name: house-price-app
+    ports:
+      - "8501:8501"
+    environment:
+      - API_URL=http://api:8000
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped

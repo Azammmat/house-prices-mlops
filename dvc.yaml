@@ -1,0 +1,38 @@
+stages:
+  clean:
+    cmd: python code/datasets/clean_data.py
+    wdir: .
+    deps:
+      - code/datasets/load_data.py
+      - code/datasets/clean_data.py
+      - data/raw/train.csv
+    outs:
+      - data/interim/cleaned.csv
+
+  split:
+    cmd: python code/datasets/split_data.py
+    wdir: .
+    deps:
+      - code/datasets/split_data.py
+      - data/interim/cleaned.csv
+    params:
+      - split.test_size
+      - split.random_state
+    outs:
+      - data/processed/train.csv
+      - data/processed/test.csv
+
+  train:
+    cmd: python code/models/train.py
+    wdir: .
+    deps:
+      - code/models/features.py
+      - code/models/train.py
+      - data/processed/train.csv
+      - data/processed/test.csv
+    outs:
+      - models/model.joblib:
+          cache: false
+    metrics:
+      - metrics.json:
+          cache: false
