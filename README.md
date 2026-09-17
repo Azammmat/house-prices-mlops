@@ -63,7 +63,7 @@ automated run that repeats every 5 minutes.
 
 1. Clone the repository:
    ```powershell
-   git clone <your-repo-url>
+   git clone https://github.com/Azammmat/house-prices-mlops.git
    cd house-prices-mlops
    ```
 
